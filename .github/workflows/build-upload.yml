@@ -1,0 +1,56 @@
+name: Build and upload Tom Kids World video
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "YouTube video title"
+        required: true
+        default: "Tommy and the Little Lost Duck | Tom Kids World"
+        type: string
+      description:
+        description: "YouTube video description"
+        required: true
+        default: "A gentle story for kids about kindness. #KidsStories #TomKidsWorld"
+        type: string
+      privacy:
+        description: "Use private for the first test"
+        required: true
+        default: private
+        type: choice
+        options:
+          - private
+          - unlisted
+          - public
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Build and upload
+        env:
+          YOUTUBE_TOKEN_JSON: ${{ secrets.YOUTUBE_TOKEN_JSON }}
+          VIDEO_TITLE: ${{ inputs.title }}
+          VIDEO_DESCRIPTION: ${{ inputs.description }}
+          VIDEO_PRIVACY: ${{ inputs.privacy }}
+        run: python scripts/build_video.py
